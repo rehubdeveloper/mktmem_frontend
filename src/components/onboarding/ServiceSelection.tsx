@@ -64,7 +64,7 @@ const ServiceSelection: React.FC = () => {
   ];
 
   const toggleService = (serviceId: string) => {
-    setSelectedServices(prev => 
+    setSelectedServices(prev =>
       prev.includes(serviceId)
         ? prev.filter(id => id !== serviceId)
         : [...prev, serviceId]
@@ -84,7 +84,7 @@ const ServiceSelection: React.FC = () => {
     };
 
     setUser(updatedUser);
-    navigate('/onboarding/surveys');
+    navigate('/onboarding/register');
   };
 
   return (
@@ -95,7 +95,7 @@ const ServiceSelection: React.FC = () => {
             Choose Your Marketing Services
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Select the services that best fit your restaurant's growth goals. 
+            Select the services that best fit your restaurant's growth goals.
             You can always add or modify services later.
           </p>
         </div>
@@ -109,11 +109,10 @@ const ServiceSelection: React.FC = () => {
               <div
                 key={service.id}
                 onClick={() => toggleService(service.id)}
-                className={`relative bg-white rounded-2xl p-8 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
-                  isSelected
+                className={`relative bg-white rounded-2xl p-8 cursor-pointer transition-all duration-300 transform hover:scale-105 ${isSelected
                     ? 'ring-2 ring-orange-500 shadow-xl'
                     : 'shadow-lg hover:shadow-xl'
-                }`}
+                  }`}
               >
                 {isSelected && (
                   <div className="absolute -top-2 -right-2 bg-orange-500 text-white rounded-full p-2">
@@ -150,11 +149,10 @@ const ServiceSelection: React.FC = () => {
           <button
             onClick={handleContinue}
             disabled={selectedServices.length === 0}
-            className={`px-12 py-4 rounded-xl text-lg font-semibold transition-all duration-200 ${
-              selectedServices.length > 0
+            className={`px-12 py-4 rounded-xl text-lg font-semibold transition-all duration-200 ${selectedServices.length > 0
                 ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-lg hover:shadow-xl'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+              }`}
           >
             Continue to Setup ({selectedServices.length} selected)
           </button>
