@@ -1,14 +1,16 @@
 import React from 'react';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Users, 
+import {
+  TrendingUp,
+  DollarSign,
+  Users,
   Calendar,
   QrCode,
   MapPin,
   ArrowUp,
   ArrowDown
 } from 'lucide-react';
+import { AppContext } from '../../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 
 const Overview: React.FC = () => {
   const stats = [
@@ -65,13 +67,31 @@ const Overview: React.FC = () => {
     }
   ];
 
+  const navigate = useNavigate();
+  const { useContext } = React;
+
+  const { loggedUser } = useContext(AppContext);
+
+  React.useEffect(() => {
+    if (!loggedUser) {
+      navigate('/onboarding/login');
+    }
+  }, [loggedUser, navigate]);
+
+  if (!loggedUser) {
+    return null;
+  }
+
+  // Use business_name if available, otherwise fallback to username
+  const displayName = loggedUser.business_name || loggedUser.username || 'User';
+
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-orange-600 to-orange-700 rounded-2xl p-8 text-white">
-        <h1 className="text-3xl font-bold mb-2">Welcome back, Maria!</h1>
+        <h1 className="text-3xl font-bold mb-2">Welcome back, {displayName}!</h1>
         <p className="text-orange-100 text-lg">
-          Here's how Taco Sofia is performing across all marketing channels.
+          Here's how your business is performing across all marketing channels.
         </p>
       </div>
 
@@ -85,10 +105,9 @@ const Overview: React.FC = () => {
                 <div className={`w-12 h-12 rounded-lg ${stat.color === 'text-green-600' ? 'bg-green-100' : stat.color === 'text-blue-600' ? 'bg-blue-100' : 'bg-orange-100'} flex items-center justify-center`}>
                   <Icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
-                <div className={`flex items-center space-x-1 text-sm ${
-                  stat.trend === 'up' ? 'text-green-600' : 
+                <div className={`flex items-center space-x-1 text-sm ${stat.trend === 'up' ? 'text-green-600' :
                   stat.trend === 'down' ? 'text-red-600' : 'text-gray-500'
-                }`}>
+                  }`}>
                   {stat.trend === 'up' && <ArrowUp className="w-4 h-4" />}
                   {stat.trend === 'down' && <ArrowDown className="w-4 h-4" />}
                   <span>{stat.change}</span>
@@ -158,10 +177,9 @@ const Overview: React.FC = () => {
             }
           ].map((activity, index) => (
             <div key={index} className="flex items-center space-x-4 py-3 border-b border-gray-100 last:border-b-0">
-              <div className={`w-3 h-3 rounded-full ${
-                activity.type === 'success' ? 'bg-green-400' :
+              <div className={`w-3 h-3 rounded-full ${activity.type === 'success' ? 'bg-green-400' :
                 activity.type === 'info' ? 'bg-blue-400' : 'bg-gray-400'
-              }`} />
+                }`} />
               <div className="flex-1">
                 <p className="text-gray-900 font-medium">{activity.action}</p>
                 <p className="text-gray-600 text-sm">{activity.location}</p>

@@ -13,6 +13,8 @@ import {
 
 interface AppContextType {
   user: User | null;
+  loggedUser: any | null;
+  setLoggedUser: any;
   setUser: (user: User) => void;
   strUnits: STRUnit[];
   setStrUnits: (units: STRUnit[]) => void;
@@ -52,7 +54,9 @@ export const AppContext = createContext<AppContextType>({
   setMessageTemplates: () => { },
   updateService: () => { },
   selectedServiceType: [],
-  setSelectedServiceType: () => { }
+  setSelectedServiceType: () => { },
+  setLoggedUser: () => { },
+  loggedUser: null
 });
 
 export const useApp = () => {
@@ -64,6 +68,7 @@ export const useApp = () => {
 };
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [loggedUser, setLoggedUser] = useState<User | null>(null);
   const [selectedServiceType, setSelectedServiceType] = useState<string[]>([]);
   const [user, setUser] = useState<User | null>({
     id: '1',
@@ -344,7 +349,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setMessageTemplates,
       updateService,
       selectedServiceType,
-      setSelectedServiceType
+      setSelectedServiceType,
+      loggedUser,
+      setLoggedUser
     }}>
       {children}
     </AppContext.Provider>

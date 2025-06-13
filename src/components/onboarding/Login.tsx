@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Eye, EyeOff, User, Mail, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
+import { AppContext } from '../../context/AppContext';
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
@@ -12,6 +12,7 @@ export default function Login() {
         username: ''
     });
     const navigate = useNavigate();
+    const { setLoggedUser } = useContext(AppContext);
 
     interface FormDataType {
         password: string;
@@ -21,6 +22,14 @@ export default function Login() {
     interface ApiResponse {
         errors?: Record<string, string[]>;
         message?: string;
+        user?: {
+            id: number;
+            username: string;
+            email: string;
+            business_name: string;
+            business_type: string;
+            // Add other user properties as needed
+        };
     }
 
     const validateForm = (): string | null => {
@@ -80,10 +89,19 @@ export default function Login() {
                 }
             }
 
+            // Check if user data exists in the response
+            if (!data.user) {
+                throw new Error('User data not found in response');
+            }
+
+            // Store the user data from the nested user object
+            setLoggedUser(data.user);
             console.log('Login successful:', data);
-            // Handle successful Login (e.g., redirect to login or dashboard)
+            console.log('User data stored:', data.user);
+
+            // Handle successful Login
             alert('Login successful!');
-            navigate("/dashboard")
+            navigate("/dashboard");
             setFormData({
                 username: '',
                 password: '',
@@ -97,7 +115,6 @@ export default function Login() {
             setIsLoading(false);
         }
     };
-
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 py-12 px-4">
@@ -136,7 +153,6 @@ export default function Login() {
                                 <User className="w-5 h-5 text-orange-500" />
                                 User Information
                             </h2>
-
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700">Email Address/Username *</label>
@@ -179,7 +195,6 @@ export default function Login() {
                                     </div>
                                 </div>
 
-
                                 {/* Submit Button */}
                                 <div className="pt-6">
                                     <button
@@ -208,4 +223,3 @@ export default function Login() {
         </div>
     );
 }
-
