@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import LandingPage from './components/LandingPage';
 import Layout from './components/Layout';
@@ -18,7 +18,7 @@ import Login from './components/onboarding/Login';
 function App() {
   return (
     <AppProvider>
-      <Router>
+      <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/onboarding" element={<ServiceSelection />} />
@@ -38,7 +38,7 @@ function App() {
           {/* Catch all route - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Router>
+      </BrowserRouter>
     </AppProvider>
   );
 }
