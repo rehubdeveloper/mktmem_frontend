@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { 
-  User, 
-  STRUnit, 
-  ItineraryCategory, 
-  ContentPost, 
-  Contact, 
-  Campaign, 
-  AutomationRule, 
-  MessageTemplate 
+import {
+  User,
+  STRUnit,
+  ItineraryCategory,
+  ContentPost,
+  Contact,
+  Campaign,
+  AutomationRule,
+  MessageTemplate
 } from '../types';
+
 
 interface AppContextType {
   user: User | null;
@@ -28,9 +29,31 @@ interface AppContextType {
   messageTemplates: MessageTemplate[];
   setMessageTemplates: (templates: MessageTemplate[]) => void;
   updateService: (serviceId: string, config: any) => void;
+  selectedServiceType: string[];
+  setSelectedServiceType: (types: string[]) => void;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+export const AppContext = createContext<AppContextType>({
+  user: null,
+  setUser: () => { },
+  strUnits: [],
+  setStrUnits: () => { },
+  itineraryCategories: [],
+  setItineraryCategories: () => { },
+  contentPosts: [],
+  setContentPosts: () => { },
+  contacts: [],
+  setContacts: () => { },
+  campaigns: [],
+  setCampaigns: () => { },
+  automationRules: [],
+  setAutomationRules: () => { },
+  messageTemplates: [],
+  setMessageTemplates: () => { },
+  updateService: () => { },
+  selectedServiceType: [],
+  setSelectedServiceType: () => { }
+});
 
 export const useApp = () => {
   const context = useContext(AppContext);
@@ -41,6 +64,7 @@ export const useApp = () => {
 };
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [selectedServiceType, setSelectedServiceType] = useState<string[]>([]);
   const [user, setUser] = useState<User | null>({
     id: '1',
     name: 'Maria Rodriguez',
@@ -292,11 +316,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateService = (serviceId: string, config: any) => {
     if (!user) return;
-    
-    const updatedServices = user.services.map(service => 
+
+    const updatedServices = user.services.map(service =>
       service.id === serviceId ? { ...service, config, active: true } : service
     );
-    
+
     setUser({ ...user, services: updatedServices });
   };
 
@@ -318,7 +342,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setAutomationRules,
       messageTemplates,
       setMessageTemplates,
-      updateService
+      updateService,
+      selectedServiceType,
+      setSelectedServiceType
     }}>
       {children}
     </AppContext.Provider>

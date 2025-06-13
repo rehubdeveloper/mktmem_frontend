@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Eye, EyeOff, User, Mail, Lock, Building, MapPin, Phone, Utensils } from 'lucide-react';
+import { AppContext } from '../../context/AppContext';
 
 export default function RegistrationPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showPassword2, setShowPassword2] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string>('');
+    const { selectedServiceType } = useContext(AppContext);
+
     interface FormDataType {
         username: string;
         email: string;
@@ -29,30 +34,103 @@ export default function RegistrationPage() {
         phone_number: '',
         first_name: '',
         last_name: '',
-        service_types: []
+        service_types: selectedServiceType, // Initialize with default service type
     });
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
         const { name, value } = e.target;
         setFormData((prev: FormDataType) => ({
             ...prev,
-            [name]: value
+            [name]: value,
+            // Update service_types when business_type changes
+            ...(name === 'business_type' && { service_types: [value] })
         }));
     };
 
-    type ServiceType = 'presence' | 'qr' | 'messaging';
-
-    const handleServiceTypeChange = (service: ServiceType): void => {
-        setFormData((prev: FormDataType) => ({
-            ...prev,
-            service_types: prev.service_types.includes(service)
-                ? prev.service_types.filter((s: string) => s !== service)
-                : [...prev.service_types, service]
-        }));
+    // Form validation
+    const validateForm = (): string | null => {
+        if (!formData.username || formData.username.length < 3) {
+            return 'Username must be at least 3 characters long';
+        }
+        if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+            return 'Please enter a valid email address';
+        }
+        if (!formData.password || formData.password.length < 8) {
+            return 'Password must be at least 8 characters long';
+        }
+        if (formData.password !== formData.password2) {
+            return 'Passwords do not match';
+        }
+        if (!formData.first_name || !formData.last_name) {
+            return 'First name and last name are required';
+        }
+        if (!formData.business_name) {
+            return 'Business name is required';
+        }
+        if (!formData.business_address) {
+            return 'Business address is required';
+        }
+        if (!formData.phone_number) {
+            return 'Phone number is required';
+        }
+        return null;
     };
 
-    const handleSubmit = () => {
-        console.log('Form submitted:', formData);
+    interface ApiResponse {
+        message?: string;
+        errors?: Record<string, string[]>;
+    }
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+        e.preventDefault();
+        setError('');
+
+        // Validate form
+        const validationError = validateForm();
+        if (validationError) {
+            setError(validationError);
+            return;
+        }
+
+        setIsLoading(true);
+        console.log("sending....", formData);
+
+        try {
+            const response: Response = await fetch("https://mktmem-backend.onrender.com/api/users/register/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data: ApiResponse = await response.json();
+
+            if (!response.ok) {
+                // Handle different types of errors
+                if (data.errors) {
+                    // Handle field-specific errors
+                    const errorMessages = Object.entries(data.errors)
+                        .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+                        .join('\n');
+                    throw new Error(errorMessages);
+                } else {
+                    throw new Error(data.message || `Registration failed with status ${response.status}`);
+                }
+            }
+
+            console.log('Registration successful:', data);
+            // Handle successful registration (e.g., redirect to login or dashboard)
+            alert('Registration successful! Please check your email to verify your account.');
+
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+            console.error("Registration error: ", errorMessage);
+            setError(errorMessage);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -69,7 +147,22 @@ export default function RegistrationPage() {
 
                 {/* Registration Form */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/20">
-                    <div className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Error Display */}
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                                <div className="flex">
+                                    <div className="ml-3">
+                                        <h3 className="text-sm font-medium text-red-800">
+                                            Registration Error
+                                        </h3>
+                                        <div className="mt-2 text-sm text-red-700">
+                                            <pre className="whitespace-pre-wrap">{error}</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Personal Information Section */}
                         <div className="space-y-4">
@@ -80,24 +173,26 @@ export default function RegistrationPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">First Name</label>
+                                    <label className="text-sm font-medium text-gray-700">First Name *</label>
                                     <input
                                         type="text"
                                         name="first_name"
                                         value={formData.first_name}
                                         onChange={handleInputChange}
+                                        required
                                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/50"
                                         placeholder="John"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Last Name</label>
+                                    <label className="text-sm font-medium text-gray-700">Last Name *</label>
                                     <input
                                         type="text"
                                         name="last_name"
                                         value={formData.last_name}
                                         onChange={handleInputChange}
+                                        required
                                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/50"
                                         placeholder="Doe"
                                     />
@@ -105,7 +200,7 @@ export default function RegistrationPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Username</label>
+                                <label className="text-sm font-medium text-gray-700">Username *</label>
                                 <div className="relative">
                                     <User className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
                                     <input
@@ -113,6 +208,8 @@ export default function RegistrationPage() {
                                         name="username"
                                         value={formData.username}
                                         onChange={handleInputChange}
+                                        required
+                                        minLength={3}
                                         className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/50"
                                         placeholder="business_owner"
                                     />
@@ -120,7 +217,7 @@ export default function RegistrationPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Email Address</label>
+                                <label className="text-sm font-medium text-gray-700">Email Address *</label>
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
                                     <input
@@ -128,6 +225,7 @@ export default function RegistrationPage() {
                                         name="email"
                                         value={formData.email}
                                         onChange={handleInputChange}
+                                        required
                                         className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/50"
                                         placeholder="owner@business.com"
                                     />
@@ -136,7 +234,7 @@ export default function RegistrationPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Password</label>
+                                    <label className="text-sm font-medium text-gray-700">Password *</label>
                                     <div className="relative">
                                         <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
                                         <input
@@ -144,6 +242,8 @@ export default function RegistrationPage() {
                                             name="password"
                                             value={formData.password}
                                             onChange={handleInputChange}
+                                            required
+                                            minLength={8}
                                             className="w-full pl-12 pr-12 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/50"
                                             placeholder="••••••••"
                                         />
@@ -158,7 +258,7 @@ export default function RegistrationPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+                                    <label className="text-sm font-medium text-gray-700">Confirm Password *</label>
                                     <div className="relative">
                                         <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
                                         <input
@@ -166,6 +266,7 @@ export default function RegistrationPage() {
                                             name="password2"
                                             value={formData.password2}
                                             onChange={handleInputChange}
+                                            required
                                             className="w-full pl-12 pr-12 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/50"
                                             placeholder="••••••••"
                                         />
@@ -189,7 +290,7 @@ export default function RegistrationPage() {
                             </h2>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Business Name</label>
+                                <label className="text-sm font-medium text-gray-700">Business Name *</label>
                                 <div className="relative">
                                     <Building className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
                                     <input
@@ -197,6 +298,7 @@ export default function RegistrationPage() {
                                         name="business_name"
                                         value={formData.business_name}
                                         onChange={handleInputChange}
+                                        required
                                         className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50"
                                         placeholder="My Business"
                                     />
@@ -204,11 +306,12 @@ export default function RegistrationPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Business Type</label>
+                                <label className="text-sm font-medium text-gray-700">Business Type *</label>
                                 <select
                                     name="business_type"
                                     value={formData.business_type}
                                     onChange={handleInputChange}
+                                    required
                                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50"
                                 >
                                     <option value="restaurant">Restaurant</option>
@@ -220,7 +323,7 @@ export default function RegistrationPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Business Address</label>
+                                <label className="text-sm font-medium text-gray-700">Business Address *</label>
                                 <div className="relative">
                                     <MapPin className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
                                     <input
@@ -228,6 +331,7 @@ export default function RegistrationPage() {
                                         name="business_address"
                                         value={formData.business_address}
                                         onChange={handleInputChange}
+                                        required
                                         className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50"
                                         placeholder="123 Main St, Memphis, TN"
                                     />
@@ -235,7 +339,7 @@ export default function RegistrationPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Phone Number</label>
+                                <label className="text-sm font-medium text-gray-700">Phone Number *</label>
                                 <div className="relative">
                                     <Phone className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
                                     <input
@@ -243,6 +347,7 @@ export default function RegistrationPage() {
                                         name="phone_number"
                                         value={formData.phone_number}
                                         onChange={handleInputChange}
+                                        required
                                         className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50"
                                         placeholder="901-555-0123"
                                     />
@@ -250,51 +355,14 @@ export default function RegistrationPage() {
                             </div>
                         </div>
 
-                        {/* Service Types Section */}
-                        <div className="space-y-4 pt-6 border-t border-gray-200">
-                            <h2 className="text-xl font-semibold text-gray-800">Service Types</h2>
-                            <p className="text-sm text-gray-600">Select the services you want to offer</p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {[
-                                    { id: 'presence' as ServiceType, label: 'Online Presence', desc: 'Digital storefront' },
-                                    { id: 'qr' as ServiceType, label: 'QR Menu', desc: 'Contactless ordering' },
-                                    { id: 'messaging' as ServiceType, label: 'Customer Messaging', desc: 'Direct communication' }
-                                ].map((service) => (
-                                    <div
-                                        key={service.id}
-                                        onClick={() => handleServiceTypeChange(service.id)}
-                                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${formData.service_types.includes(service.id)
-                                            ? 'border-orange-500 bg-orange-50'
-                                            : 'border-gray-200 bg-white/50 hover:border-orange-200'
-                                            }`}
-                                    >
-                                        <div className="flex items-center space-x-3">
-                                            <div className={`w-4 h-4 rounded-full border-2 ${formData.service_types.includes(service.id)
-                                                ? 'border-orange-500 bg-orange-500'
-                                                : 'border-gray-300'
-                                                }`}>
-                                                {formData.service_types.includes(service.id) && (
-                                                    <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-gray-800">{service.label}</p>
-                                                <p className="text-xs text-gray-600">{service.desc}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
                         {/* Submit Button */}
                         <div className="pt-6">
                             <button
-                                onClick={handleSubmit}
-                                className="w-full bg-orange-500 text-white font-semibold py-4 px-6 rounded-xl hover:from-orange-600 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full bg-orange-500 text-white font-semibold py-4 px-6 rounded-xl hover:from-orange-600 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                             >
-                                Create My Account
+                                {isLoading ? 'Creating Account...' : 'Create My Account'}
                             </button>
                         </div>
 
@@ -307,7 +375,7 @@ export default function RegistrationPage() {
                                 </a>
                             </p>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>

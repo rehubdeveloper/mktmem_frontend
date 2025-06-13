@@ -5,7 +5,7 @@ import { useApp } from '../../context/AppContext';
 
 const ServiceSelection: React.FC = () => {
   const navigate = useNavigate();
-  const { user, setUser } = useApp();
+  const { user, setUser, setSelectedServiceType } = useApp();
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   const services = [
@@ -82,7 +82,7 @@ const ServiceSelection: React.FC = () => {
         active: false,
       }))
     };
-
+    setSelectedServiceType(selectedServices);
     setUser(updatedUser);
     navigate('/onboarding/register');
   };
@@ -110,8 +110,8 @@ const ServiceSelection: React.FC = () => {
                 key={service.id}
                 onClick={() => toggleService(service.id)}
                 className={`relative bg-white rounded-2xl p-8 cursor-pointer transition-all duration-300 transform hover:scale-105 ${isSelected
-                    ? 'ring-2 ring-orange-500 shadow-xl'
-                    : 'shadow-lg hover:shadow-xl'
+                  ? 'ring-2 ring-orange-500 shadow-xl'
+                  : 'shadow-lg hover:shadow-xl'
                   }`}
               >
                 {isSelected && (
@@ -150,8 +150,8 @@ const ServiceSelection: React.FC = () => {
             onClick={handleContinue}
             disabled={selectedServices.length === 0}
             className={`px-12 py-4 rounded-xl text-lg font-semibold transition-all duration-200 ${selectedServices.length > 0
-                ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-lg hover:shadow-xl'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-lg hover:shadow-xl'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
           >
             Continue to Setup ({selectedServices.length} selected)
