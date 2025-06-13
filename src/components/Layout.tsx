@@ -1,5 +1,5 @@
-import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   Calendar,
@@ -11,6 +11,7 @@ import {
   Link as LinkIcon,
   MessageSquare
 } from 'lucide-react';
+import { AppContext } from '../context/AppContext';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -25,6 +26,23 @@ const Layout: React.FC = () => {
     { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
+  const navigate = useNavigate();
+
+  // Check if user is logged in
+  const { loggedUser } = useContext(AppContext);
+
+  React.useEffect(() => {
+    if (!loggedUser) {
+      navigate('/onboarding/login');
+    }
+  }, [loggedUser, navigate]);
+
+  if (!loggedUser) {
+    return null;
+  }
+
+  // Use business_name if available, otherwise fallback to username
+  const displayName = loggedUser.business_name || loggedUser.username || 'User';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,11 +63,11 @@ const Layout: React.FC = () => {
             </Link>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">Taco Sofia</p>
-                <p className="text-xs text-gray-500">maria@tacosofia.com</p>
+                <p className="text-sm font-medium text-gray-900">{displayName}</p>
+                <p className="text-xs text-gray-500">{loggedUser.email}</p>
               </div>
               <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-orange-700">M</span>
+                <span className="text-sm font-medium text-orange-700">{displayName.charAt(0)}</span>
               </div>
             </div>
           </div>
