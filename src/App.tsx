@@ -13,6 +13,7 @@ import ItineraryInclusion from './components/dashboard/ItineraryInclusion';
 import Messaging from './components/dashboard/Messaging';
 import Billing from './components/dashboard/Billing';
 import Registration from './components/onboarding/Registration';
+import Login from './components/onboarding/Login';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/onboarding" element={<ServiceSelection />} />
           <Route path="/onboarding/register" element={<Registration />} />
+          <Route path="/onboarding/login" element={<Login />} />
           <Route path="/onboarding/surveys" element={<ServiceSurveys />} />
           <Route path="/dashboard" element={<Layout />}>
             <Route index element={<Overview />} />

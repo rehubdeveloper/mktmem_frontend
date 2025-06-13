@@ -1,6 +1,7 @@
 import { useContext, useState } from 'react';
 import { Eye, EyeOff, User, Mail, Lock, Building, MapPin, Phone, Utensils } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function RegistrationPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -8,6 +9,7 @@ export default function RegistrationPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string>('');
     const { selectedServiceType } = useContext(AppContext);
+    const navigate = useNavigate();
 
     interface FormDataType {
         username: string;
@@ -123,6 +125,20 @@ export default function RegistrationPage() {
             console.log('Registration successful:', data);
             // Handle successful registration (e.g., redirect to login or dashboard)
             alert('Registration successful! Please check your email to verify your account.');
+            navigate('/onboarding/login');
+            setFormData({
+                username: '',
+                email: '',
+                password: '',
+                password2: '',
+                business_name: '',
+                business_type: 'restaurant',
+                business_address: '',
+                phone_number: '',
+                first_name: '',
+                last_name: '',
+                service_types: selectedServiceType,
+            });
 
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
