@@ -85,6 +85,7 @@ const Overview: React.FC = () => {
   // Use business_name if available, otherwise fallback to username
   const displayName = loggedUser.business_name || 'User';
 
+
   return (
     <div className="space-y-8">
       {/* Welcome Header */}

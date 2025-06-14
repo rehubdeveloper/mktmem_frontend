@@ -8,8 +8,8 @@ export default function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string>('');
     const [formData, setFormData] = useState({
+        username: '',
         password: '',
-        username: ''
     });
     const navigate = useNavigate();
 
@@ -21,10 +21,10 @@ export default function Login() {
     interface ApiResponse {
         errors?: Record<string, string[]>;
         message?: string;
+        token?: any;
         user?: {
             id: number;
             username: string;
-            email: string;
             business_name: string;
             business_type: string;
             // Add other user properties as needed
@@ -34,7 +34,7 @@ export default function Login() {
     const { setLoggedUser } = useContext(AppContext);
     const validateForm = (): string | null => {
         if (!formData.username || formData.username.length < 3) {
-            return 'Username must be at least 3 characters long';
+            return 'username must be at least 3 characters long';
         }
         if (!formData.password || formData.password.length < 8) {
             return 'Password must be at least 8 characters long';
@@ -50,7 +50,8 @@ export default function Login() {
         }));
     };
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+
+    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         setError('');
 
@@ -62,14 +63,13 @@ export default function Login() {
         }
 
         setIsLoading(true);
-        console.log("sending....");
+        console.log("Attempting login...");
 
         try {
             const response: Response = await fetch("https://mktmem-backend.onrender.com/api/users/login/", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
                 },
                 body: JSON.stringify(formData)
             });
@@ -81,7 +81,7 @@ export default function Login() {
                 if (data.errors) {
                     // Handle field-specific errors
                     const errorMessages = Object.entries(data.errors)
-                        .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+                        .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
                         .join('\n');
                     throw new Error(errorMessages);
                 } else {
@@ -89,32 +89,49 @@ export default function Login() {
                 }
             }
 
-            // Check if user data exists in the response
+            // Validate response data
+            if (!data.token) {
+                throw new Error('Authentication token not received');
+            }
+
             if (!data.user) {
                 throw new Error('User data not found in response');
             }
-            localStorage.setItem('user', JSON.stringify(data.user));
-            setLoggedUser(data.user);
-            // Store the user data from the nested user object
-            console.log('Login successful:', data);
-            console.log('User data stored:', data.user);
 
-            // Handle successful Login
-            alert('Login successful!');
-            navigate("/dashboard");
+            // Store authentication data
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            // Update context - this will trigger the useEffect to fetch userDetails
+            setLoggedUser(data.user);
+
+            console.log('Login successful!');
+
+            // Clear form data
             setFormData({
                 username: '',
                 password: '',
             });
 
+            // Show success message
+            alert('Login successful!');
+
+            // Navigate to dashboard
+            navigate("/dashboard");
+
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-            console.error("Login error: ", errorMessage);
+            const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred during login';
+            console.error("Login error:", errorMessage);
             setError(errorMessage);
+
+            // Clear any potentially invalid stored data
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
         } finally {
             setIsLoading(false);
         }
-    };
+    }
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 py-12 px-4">
@@ -155,7 +172,7 @@ export default function Login() {
                             </h2>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Email Address/Username *</label>
+                                <label className="text-sm font-medium text-gray-700">Email Address/ Username *</label>
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
                                     <input
@@ -210,7 +227,7 @@ export default function Login() {
                                 <div className="text-center pt-4">
                                     <p className="text-sm text-gray-600">
                                         Don't have an account?{' '}
-                                        <a href="#" className="text-orange-500 hover:text-orange-600 font-medium">
+                                        <a href="/onboarding" className="text-orange-500 hover:text-orange-600 font-medium">
                                             Sign up here
                                         </a>
                                     </p>

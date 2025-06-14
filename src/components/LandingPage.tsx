@@ -27,6 +27,7 @@ const LandingPage: React.FC = () => {
   const logout = () => {
     // Clear user data and redirect to login
     localStorage.removeItem('user');
+    localStorage.removeItem("token")
     setIsLoggedIn(false);
     setLoggedUser(null);
     navigate('/onboarding/login');

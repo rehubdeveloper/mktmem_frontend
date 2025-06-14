@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Calendar,
@@ -401,7 +400,7 @@ const PresenceMarketing: React.FC = () => {
   );
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-0">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col space-y-4">
         <div>

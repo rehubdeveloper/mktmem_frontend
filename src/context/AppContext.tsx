@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import {
   User,
   STRUnit,
@@ -10,12 +10,16 @@ import {
   MessageTemplate
 } from '../types';
 
-
 interface AppContextType {
   user: User | null;
+  userDetails: any | null;
   loggedUser: any | null;
-  setLoggedUser: any;
+  isLoadingUserDetails: boolean;
+  userDetailsError: string | null;
+  setLoggedUser: (user: any) => void;
   setUser: (user: User) => void;
+  fetchUserProfile: () => Promise<any>;
+  refreshUserDetails: () => Promise<void>;
   strUnits: STRUnit[];
   setStrUnits: (units: STRUnit[]) => void;
   itineraryCategories: ItineraryCategory[];
@@ -37,7 +41,14 @@ interface AppContextType {
 
 export const AppContext = createContext<AppContextType>({
   user: null,
+  userDetails: null,
+  loggedUser: null,
+  isLoadingUserDetails: false,
+  userDetailsError: null,
   setUser: () => { },
+  setLoggedUser: () => { },
+  fetchUserProfile: async () => ({}),
+  refreshUserDetails: async () => { },
   strUnits: [],
   setStrUnits: () => { },
   itineraryCategories: [],
@@ -55,8 +66,6 @@ export const AppContext = createContext<AppContextType>({
   updateService: () => { },
   selectedServiceType: [],
   setSelectedServiceType: () => { },
-  setLoggedUser: () => { },
-  loggedUser: null
 });
 
 export const useApp = () => {
@@ -69,7 +78,11 @@ export const useApp = () => {
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [loggedUser, setLoggedUser] = useState<User | null>(null);
+  const [userDetails, setUserDetails] = useState<any | null>(null);
+  const [isLoadingUserDetails, setIsLoadingUserDetails] = useState<boolean>(false);
+  const [userDetailsError, setUserDetailsError] = useState<string | null>(null);
   const [selectedServiceType, setSelectedServiceType] = useState<string[]>([]);
+
   const [user, setUser] = useState<User | null>({
     id: '1',
     name: 'Maria Rodriguez',
@@ -83,14 +96,108 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     onboardingComplete: false
   });
 
+  // Memoized function to fetch user profile
+  const fetchUserProfile = useCallback(async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    setIsLoadingUserDetails(true);
+    setUserDetailsError(null);
+
+    try {
+      const response = await fetch('https://mktmem-backend.onrender.com/api/users/profile/', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token is invalid or expired
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setLoggedUser(null);
+          setUserDetails(null);
+          throw new Error('Authentication expired. Please log in again.');
+        }
+        throw new Error(`Failed to fetch profile: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Profile fetched successfully!');
+      setUserDetails(data);
+      return data;
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user profile';
+      console.error('Profile fetch error:', errorMessage);
+      setUserDetailsError(errorMessage);
+      throw error;
+    } finally {
+      setIsLoadingUserDetails(false);
+    }
+  }, []);
+
+  // Function to refresh user details on demand
+  const refreshUserDetails = useCallback(async () => {
+    if (loggedUser) {
+      try {
+        await fetchUserProfile();
+      } catch (error) {
+        console.error('Error refreshing user details:', error);
+      }
+    }
+  }, [loggedUser, fetchUserProfile]);
+
+  // Initialize logged user from localStorage on mount
   useEffect(() => {
     const currentUser = localStorage.getItem('user');
-    if (currentUser) {
-      const parsedUser = JSON.parse(currentUser);
-      setLoggedUser(parsedUser);
-    }
-  }, [])
+    const token = localStorage.getItem('token');
 
+    if (currentUser && token) {
+      try {
+        const parsedUser = JSON.parse(currentUser);
+        setLoggedUser(parsedUser);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
+    }
+  }, []);
+
+  // Fetch user profile when loggedUser changes
+  useEffect(() => {
+    if (loggedUser) {
+      fetchUserProfile().catch(error => {
+        console.error('Error fetching user profile on login:', error);
+      });
+    } else {
+      // Clear user details when user logs out
+      setUserDetails(null);
+      setUserDetailsError(null);
+    }
+  }, [loggedUser, fetchUserProfile]);
+
+  // Enhanced setLoggedUser function that also updates localStorage
+  const handleSetLoggedUser = useCallback((user: any) => {
+    setLoggedUser(user);
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      setUserDetails(null);
+      setUserDetailsError(null);
+    }
+  }, []);
+
+  // Mock data states (keeping your existing data)
   const [strUnits, setStrUnits] = useState<STRUnit[]>([
     {
       id: '1',
@@ -257,7 +364,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       name: 'Welcome New Customers',
       trigger: 'signup',
       triggerConditions: {},
-      delay: 60, // 1 hour
+      delay: 60,
       channel: 'email',
       template: 'welcome-email',
       active: true,
@@ -291,7 +398,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       name: 'Re-engagement Campaign',
       trigger: 'inactivity',
       triggerConditions: { days: 30 },
-      delay: 1440, // 24 hours
+      delay: 1440,
       channel: 'email',
       template: 'reengagement-email',
       active: false,
@@ -327,7 +434,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   ]);
 
-  const updateService = (serviceId: string, config: any) => {
+  const updateService = useCallback((serviceId: string, config: any) => {
     if (!user) return;
 
     const updatedServices = user.services.map(service =>
@@ -335,12 +442,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     );
 
     setUser({ ...user, services: updatedServices });
-  };
+  }, [user]);
 
   return (
     <AppContext.Provider value={{
       user,
       setUser,
+      userDetails,
+      loggedUser,
+      isLoadingUserDetails,
+      userDetailsError,
+      setLoggedUser: handleSetLoggedUser,
+      fetchUserProfile,
+      refreshUserDetails,
       strUnits,
       setStrUnits,
       itineraryCategories,
@@ -358,8 +472,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       updateService,
       selectedServiceType,
       setSelectedServiceType,
-      loggedUser,
-      setLoggedUser
     }}>
       {children}
     </AppContext.Provider>

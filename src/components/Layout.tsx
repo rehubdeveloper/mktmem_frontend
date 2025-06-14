@@ -29,7 +29,7 @@ const Layout: React.FC = () => {
   const navigate = useNavigate();
 
   // Check if user is logged in
-  const { loggedUser } = useContext(AppContext);
+  const { loggedUser, userDetails } = useContext(AppContext);
 
   React.useEffect(() => {
     if (!loggedUser) {
@@ -42,12 +42,13 @@ const Layout: React.FC = () => {
   }
 
   // Use business_name if available, otherwise fallback to username
-  const displayName = loggedUser.business_name || loggedUser.username || 'User';
+  const displayName = loggedUser.username || 'User';
+  const businessName = loggedUser.business_name
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 py-2 md:pt-1">
+      <header className="bg-white shadow-sm border-b border-gray-200 py-2 md:pt-1 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="text-xl font-bold text-orange-600">
@@ -56,7 +57,7 @@ const Layout: React.FC = () => {
                   <ChefHat className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900">MemStays Marketing</h1>
+                  <h1 className="text-lg font-bold text-gray-900">{businessName}</h1>
                   <p className="text-xs text-gray-500 hidden md:flex">Restaurant Growth Platform</p>
                 </div>
               </div>
@@ -74,7 +75,7 @@ const Layout: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex sticky inset-0">
         {/* Sidebar */}
         <nav className="w-20 md:w-64 bg-white shadow-sm h-screen sticky top-0 pt-1">
           <div className="md:p-6 px-2">
