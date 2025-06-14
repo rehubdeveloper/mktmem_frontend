@@ -1,6 +1,7 @@
-import React from 'react';
-import { ArrowRight, CheckCircle, MapPin, MessageSquare, Eye, Smartphone, Star, Heart, Calendar, QrCode, Users, TrendingUp, Store, Music } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useContext, useEffect } from 'react';
+import { ArrowRight, CheckCircle, MapPin, MessageSquare, Smartphone, Star, Heart, Calendar, QrCode, Users, Store, Music, ChefHat, ShoppingBasket } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { AppContext } from '../context/AppContext';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,15 +18,64 @@ const LandingPage: React.FC = () => {
     // For now, scroll to how it works section
     document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
   };
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const { loggedUser, setLoggedUser } = React.useContext(AppContext);
+  interface UserType {
+    username: string;
+    email: string;
+  }
+  const logout = () => {
+    // Clear user data and redirect to login
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    setLoggedUser(null);
+    navigate('/onboarding/login');
+  }
+
+  useEffect(() => {
+
+    if (loggedUser) {
+      setIsLoggedIn(true);
+    }
+  }, [loggedUser]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-yellow-50">
+      <header className="bg-white shadow-sm border-b border-gray-200 mt-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link to="/" className="text-xl font-bold text-orange-600">
+              <div className="flex items-center space-x-2">
+                <div className="bg-blue-600 p-2 rounded-lg">
+                  <ShoppingBasket className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold text-gray-900">Market Memphis</h1>
+                  <p className="text-xs text-gray-500">Restaurant Growth Platform</p>
+                </div>
+              </div>
+            </Link>
+            <div className={`flex items-center space-x-4 ${isLoggedIn ? '' : 'hidden'}`}>
+              <Link to="/dashboard" className="py-2 px-2 bg-gradient-to-r from-blue-300 to-blue-600 rounded-md text-sm font-medium text-gray-900 hover:text-gray-500">Dashboard</Link>
+              <div className="text-right">
+                <button onClick={logout} className="p-2 bg-gradient-to-r from-red-300 to-red-600 rounded-md text-sm font-medium text-gray-900 hover:text-gray-700">Logout</button>
+              </div>
+            </div>
+            <div className={`flex items-center space-x-4 ${isLoggedIn ? 'hidden' : ''}`}>
+              <Link to="/onboarding" className="px-3 py-2 bg-gradient-to-r from-blue-300 to-blue-600 rounded-md text-sm font-medium text-gray-900 hover:text-gray-500">Sign Up</Link>
+              <div className="text-right">
+                <Link to="/onboarding/login" className="px-4 py-2 text-white bg-gradient-to-r from-blue-600 to-orange-300 rounded-md text-sm font-medium text-gray-900 hover:text-gray-700">Login</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-blue-100 via-blue-200 to-yellow-100">
         <div className="absolute inset-0 opacity-20" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fbbf24' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }}></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left side - Text content */}
@@ -39,22 +89,22 @@ const LandingPage: React.FC = () => {
                   "Complete marketing platform for Memphis businesses."
                 </p>
               </div>
-              
+
               <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                Built for Memphis restaurants, retail shops, and tour companies by Memphians. 
+                Built for Memphis restaurants, retail shops, and tour companies by Memphians.
                 Social media management, guest targeting, customer messaging, and local discovery - all in one simple platform.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <button 
+                <button
                   onClick={handleGetStarted}
                   className="group bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >
                   Get Started Free
                   <ArrowRight className="inline-block ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
-                
-                <button 
+
+                <button
                   onClick={handleTakeTour}
                   className="bg-white text-gray-700 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-50 transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-200"
                 >
@@ -175,7 +225,7 @@ const LandingPage: React.FC = () => {
               Everything Your Business Needs to Grow
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Four powerful marketing services that work together to help Memphis businesses 
+              Four powerful marketing services that work together to help Memphis businesses
               connect with their community and grow their customer base.
             </p>
           </div>
@@ -253,7 +303,7 @@ const LandingPage: React.FC = () => {
               <h2 className="text-3xl font-bold text-gray-900 mb-8">
                 Everything you need to connect with your community
               </h2>
-              
+
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
@@ -304,7 +354,7 @@ const LandingPage: React.FC = () => {
                   <div className="text-center">
                     <h4 className="font-semibold text-gray-900">Your Marketing Dashboard</h4>
                   </div>
-                  
+
                   <div className="bg-blue-50 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-700">Social Posts</span>
@@ -340,10 +390,10 @@ const LandingPage: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
             <blockquote className="text-2xl lg:text-3xl text-white font-light leading-relaxed mb-8 italic">
-              "We built this because Memphis deserves tools made for us, not imported from somewhere else. 
+              "We built this because Memphis deserves tools made for us, not imported from somewhere else.
               We keep it simple, we keep it local, and we keep your business in your own hands."
             </blockquote>
-            
+
             <div className="grid md:grid-cols-3 gap-6 mt-12">
               <div className="bg-white/10 rounded-lg p-6">
                 <div className="flex items-center space-x-1 mb-3 justify-center">
@@ -398,7 +448,7 @@ const LandingPage: React.FC = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Choose your services</h3>
               <p className="text-gray-600 leading-relaxed">
-                Pick from social media management, guest targeting, experience packages, and customer messaging. 
+                Pick from social media management, guest targeting, experience packages, and customer messaging.
                 Start with one or combine them all.
               </p>
             </div>
@@ -409,7 +459,7 @@ const LandingPage: React.FC = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Set up your profile</h3>
               <p className="text-gray-600 leading-relaxed">
-                Tell us about your business, upload photos, set your preferences. 
+                Tell us about your business, upload photos, set your preferences.
                 Our setup wizard makes it quick and easy.
               </p>
             </div>
@@ -426,7 +476,7 @@ const LandingPage: React.FC = () => {
           </div>
 
           <div className="text-center mt-12">
-            <button 
+            <button
               onClick={handleGetStarted}
               className="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
@@ -448,7 +498,7 @@ const LandingPage: React.FC = () => {
               Choose the services that fit your needs. Start free, add services as you grow.
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Social Media Management */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
@@ -464,7 +514,7 @@ const LandingPage: React.FC = () => {
                 <li>• Multi-platform</li>
                 <li>• Analytics</li>
               </ul>
-              <button 
+              <button
                 onClick={handleGetStarted}
                 className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
@@ -486,7 +536,7 @@ const LandingPage: React.FC = () => {
                 <li>• Bid management</li>
                 <li>• Performance tracking</li>
               </ul>
-              <button 
+              <button
                 onClick={handleGetStarted}
                 className="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 transition-colors"
               >
@@ -508,7 +558,7 @@ const LandingPage: React.FC = () => {
                 <li>• Flexible discounts</li>
                 <li>• No monthly fees</li>
               </ul>
-              <button 
+              <button
                 onClick={handleGetStarted}
                 className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors"
               >
@@ -530,7 +580,7 @@ const LandingPage: React.FC = () => {
                 <li>• Automated workflows</li>
                 <li>• Analytics</li>
               </ul>
-              <button 
+              <button
                 onClick={handleGetStarted}
                 className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
               >
@@ -550,7 +600,7 @@ const LandingPage: React.FC = () => {
                 <span className="text-blue-200 line-through">$497/month</span>
                 <span className="bg-yellow-400 text-blue-900 px-3 py-1 rounded-full text-sm font-bold">Save $98</span>
               </div>
-              <button 
+              <button
                 onClick={handleGetStarted}
                 className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
               >
@@ -571,7 +621,7 @@ const LandingPage: React.FC = () => {
                 <span className="text-blue-400">Memphis</span>
               </h3>
               <p className="text-gray-300 mb-4 leading-relaxed">
-                Complete marketing platform for Memphis restaurants, retail shops, and tour companies. 
+                Complete marketing platform for Memphis restaurants, retail shops, and tour companies.
                 Built with love in the Bluff City.
               </p>
               <div className="flex items-center space-x-2 text-gray-400">
@@ -579,7 +629,7 @@ const LandingPage: React.FC = () => {
                 <span>Made for Memphis by Memphians. © 2025 Market Memphis.</span>
               </div>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Services</h4>
               <ul className="space-y-2 text-gray-300">
@@ -589,7 +639,7 @@ const LandingPage: React.FC = () => {
                 <li><a href="#" className="hover:text-white transition-colors">Customer Messaging</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-300">

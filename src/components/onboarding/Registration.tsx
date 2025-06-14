@@ -122,7 +122,7 @@ export default function RegistrationPage() {
                 }
             }
 
-            console.log('Registration successful:', data);
+            console.log('Registration successful:');
             // Handle successful registration (e.g., redirect to login or dashboard)
             alert('Registration successful! Please check your email to verify your account.');
             navigate('/onboarding/login');

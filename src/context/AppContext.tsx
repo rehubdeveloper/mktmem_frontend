@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import {
   User,
   STRUnit,
@@ -82,6 +82,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     services: [],
     onboardingComplete: false
   });
+
+  useEffect(() => {
+    const currentUser = localStorage.getItem('user');
+    if (currentUser) {
+      const parsedUser = JSON.parse(currentUser);
+      setLoggedUser(parsedUser);
+    }
+  }, [])
 
   const [strUnits, setStrUnits] = useState<STRUnit[]>([
     {

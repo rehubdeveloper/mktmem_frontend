@@ -12,7 +12,6 @@ export default function Login() {
         username: ''
     });
     const navigate = useNavigate();
-    const { setLoggedUser } = useContext(AppContext);
 
     interface FormDataType {
         password: string;
@@ -32,6 +31,7 @@ export default function Login() {
         };
     }
 
+    const { setLoggedUser } = useContext(AppContext);
     const validateForm = (): string | null => {
         if (!formData.username || formData.username.length < 3) {
             return 'Username must be at least 3 characters long';
@@ -62,7 +62,7 @@ export default function Login() {
         }
 
         setIsLoading(true);
-        console.log("sending....", formData);
+        console.log("sending....");
 
         try {
             const response: Response = await fetch("https://mktmem-backend.onrender.com/api/users/login/", {
@@ -93,9 +93,9 @@ export default function Login() {
             if (!data.user) {
                 throw new Error('User data not found in response');
             }
-
-            // Store the user data from the nested user object
+            localStorage.setItem('user', JSON.stringify(data.user));
             setLoggedUser(data.user);
+            // Store the user data from the nested user object
             console.log('Login successful:', data);
             console.log('User data stored:', data.user);
 
