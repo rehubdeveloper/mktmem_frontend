@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -27,12 +27,13 @@ const Layout: React.FC = () => {
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
   const navigate = useNavigate();
-
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   // Check if user is logged in
-  const { loggedUser, userDetails } = useContext(AppContext);
+  const { loggedUser, userDetails, setLoggedUser } = useContext(AppContext);
 
   React.useEffect(() => {
     if (!loggedUser) {
+      setIsLoggedIn(false)
       navigate('/onboarding/login');
     }
   }, [loggedUser, navigate]);
@@ -41,9 +42,18 @@ const Layout: React.FC = () => {
     return null;
   }
 
+  const logout = () => {
+    // Clear user data and redirect to login
+    localStorage.removeItem('user');
+    localStorage.removeItem("token")
+    setIsLoggedIn(false);
+    setLoggedUser(null);
+    navigate('/onboarding/login');
+  }
+
   // Use business_name if available, otherwise fallback to username
   const displayName = loggedUser.username || 'User';
-  const businessName = loggedUser.business_name
+  const businessName = userDetails.business_name || 'Business';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,6 +79,9 @@ const Layout: React.FC = () => {
               </div>
               <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-orange-700">{displayName.charAt(0)}</span>
+              </div>
+              <div className="text-right">
+                <button onClick={logout} className="p-2 bg-orange-600 rounded-md text-sm font-medium text-gray-900 hover:text-gray-700">Logout</button>
               </div>
             </div>
           </div>
