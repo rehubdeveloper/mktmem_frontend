@@ -16,6 +16,8 @@ interface AppContextType {
   loggedUser: any | null;
   isLoadingUserDetails: boolean;
   userDetailsError: string | null;
+  isInitialized: boolean;
+  isFullyLoaded: boolean; // New flag for complete data loading
   setLoggedUser: (user: any) => void;
   setUser: (user: User) => void;
   fetchUserProfile: () => Promise<any>;
@@ -45,6 +47,8 @@ export const AppContext = createContext<AppContextType>({
   loggedUser: null,
   isLoadingUserDetails: false,
   userDetailsError: null,
+  isInitialized: false,
+  isFullyLoaded: false,
   setUser: () => { },
   setLoggedUser: () => { },
   fetchUserProfile: async () => ({}),
@@ -82,6 +86,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isLoadingUserDetails, setIsLoadingUserDetails] = useState<boolean>(false);
   const [userDetailsError, setUserDetailsError] = useState<string | null>(null);
   const [selectedServiceType, setSelectedServiceType] = useState<string[]>([]);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [isFullyLoaded, setIsFullyLoaded] = useState<boolean>(false);
 
   const [user, setUser] = useState<User | null>({
     id: '1',
@@ -106,6 +112,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setIsLoadingUserDetails(true);
     setUserDetailsError(null);
+    setIsFullyLoaded(false);
 
     try {
       const response = await fetch('https://mktmem-backend.onrender.com/api/users/profile/', {
@@ -123,6 +130,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           localStorage.removeItem('user');
           setLoggedUser(null);
           setUserDetails(null);
+          setIsFullyLoaded(false);
           throw new Error('Authentication expired. Please log in again.');
         }
         throw new Error(`Failed to fetch profile: ${response.status} ${response.statusText}`);
@@ -131,12 +139,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const data = await response.json();
       console.log('Profile fetched successfully!');
       setUserDetails(data);
+
+      // Mark as fully loaded after successful fetch
+      setIsFullyLoaded(true);
       return data;
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user profile';
       console.error('Profile fetch error:', errorMessage);
       setUserDetailsError(errorMessage);
+      setIsFullyLoaded(false);
       throw error;
     } finally {
       setIsLoadingUserDetails(false);
@@ -154,48 +166,97 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [loggedUser, fetchUserProfile]);
 
-  // Initialize logged user from localStorage on mount
-  useEffect(() => {
-    const currentUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-
-    if (currentUser && token) {
-      try {
-        const parsedUser = JSON.parse(currentUser);
-        setLoggedUser(parsedUser);
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-      }
-    }
-  }, []);
-
-  // Fetch user profile when loggedUser changes
-  useEffect(() => {
-    if (loggedUser) {
-      fetchUserProfile().catch(error => {
-        console.error('Error fetching user profile on login:', error);
-      });
-    } else {
-      // Clear user details when user logs out
-      setUserDetails(null);
-      setUserDetailsError(null);
-    }
-  }, [loggedUser, fetchUserProfile]);
-
-  // Enhanced setLoggedUser function that also updates localStorage
-  const handleSetLoggedUser = useCallback((user: any) => {
+  // Enhanced setLoggedUser function
+  const handleSetLoggedUser = useCallback(async (user: any) => {
+    console.log('Setting logged user:', user);
     setLoggedUser(user);
+    setIsFullyLoaded(false); // Reset loading state
+
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
+      try {
+        // Fetch user profile and wait for completion
+        await fetchUserProfile();
+      } catch (error) {
+        console.error('Error fetching user profile after login:', error);
+        setIsFullyLoaded(false);
+      }
     } else {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       setUserDetails(null);
       setUserDetailsError(null);
+      setIsFullyLoaded(false);
     }
+  }, [fetchUserProfile]);
+
+  // Initialize on mount
+  useEffect(() => {
+    const initializeApp = async () => {
+      console.log('Initializing app...');
+      const currentUser = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+
+      if (currentUser && token) {
+        try {
+          const parsedUser = JSON.parse(currentUser);
+          console.log('Found stored user:', parsedUser);
+          setLoggedUser(parsedUser);
+
+          // Fetch fresh user profile data
+          setIsLoadingUserDetails(true);
+          setIsFullyLoaded(false);
+
+          const response = await fetch('https://mktmem-backend.onrender.com/api/users/profile/', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Token ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log('User profile loaded during initialization');
+            setUserDetails(data);
+            setIsFullyLoaded(true);
+          } else {
+            console.error('Failed to fetch profile during initialization');
+            if (response.status === 401) {
+              // Invalid token, clear everything
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              setLoggedUser(null);
+            }
+            setIsFullyLoaded(false);
+          }
+        } catch (error) {
+          console.error('Error during initialization:', error);
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          setLoggedUser(null);
+          setIsFullyLoaded(false);
+        } finally {
+          setIsLoadingUserDetails(false);
+        }
+      } else {
+        console.log('No stored user found');
+        setIsFullyLoaded(true); // No user to load, so we're "fully loaded"
+      }
+
+      setIsInitialized(true);
+      console.log('App initialization complete');
+    };
+
+    initializeApp();
   }, []);
+
+  // Update isFullyLoaded when user logs out
+  useEffect(() => {
+    if (!loggedUser) {
+      setIsFullyLoaded(true); // No user means no data to load
+    }
+  }, [loggedUser]);
 
   // Mock data states (keeping your existing data)
   const [strUnits, setStrUnits] = useState<STRUnit[]>([
@@ -452,6 +513,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       loggedUser,
       isLoadingUserDetails,
       userDetailsError,
+      isInitialized,
+      isFullyLoaded, // Provide the new loading state
       setLoggedUser: handleSetLoggedUser,
       fetchUserProfile,
       refreshUserDetails,

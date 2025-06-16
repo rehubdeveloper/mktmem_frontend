@@ -102,7 +102,7 @@ export default function Login() {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
 
-            // Update context - this will trigger the useEffect to fetch userDetails
+            // Update context - this will trigger the user profile fetch
             setLoggedUser(data.user);
 
             console.log('Login successful!');
@@ -114,10 +114,12 @@ export default function Login() {
             });
 
             // Show success message
-            alert('Login successful!');
+            setMessage('Login successful! Redirecting to dashboard...');
 
-            // Navigate to dashboard
-            navigate("/dashboard");
+            // Wait a brief moment for context to update, then navigate
+            setTimeout(() => {
+                navigate("/dashboard");
+            }, 2000);
 
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred during login';
@@ -132,6 +134,7 @@ export default function Login() {
         }
     }
 
+    const [message, setMessage] = useState<string | null>(null);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 py-12 px-4">
@@ -158,6 +161,20 @@ export default function Login() {
                                         </h3>
                                         <div className="mt-2 text-sm text-red-700">
                                             <pre className="whitespace-pre-wrap">{error}</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {message && (
+                            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                                <div className="flex">
+                                    <div className="ml-3">
+                                        <h3 className="text-sm font-medium text-green-800">
+                                            Success
+                                        </h3>
+                                        <div className="mt-2 text-sm text-green-700">
+                                            <pre className="whitespace-pre-wrap">{message}</pre>
                                         </div>
                                     </div>
                                 </div>
