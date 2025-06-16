@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import {
   TrendingUp,
   DollarSign,
@@ -72,10 +72,21 @@ const Overview: React.FC = () => {
 
   const { loggedUser } = useContext(AppContext);
 
-  React.useEffect(() => {
-    if (!loggedUser) {
-      navigate('/onboarding/login');
-    }
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const waitForUser = async () => {
+      // Simulate async load delay, remove if already handled elsewhere
+      await new Promise((res) => setTimeout(res, 500));
+
+      if (loggedUser === null) {
+        navigate('/onboarding/login');
+      } else {
+        setIsLoading(false);
+      }
+    };
+
+    waitForUser();
   }, [loggedUser, navigate]);
 
   // Use business_name if available, otherwise fallback to username
