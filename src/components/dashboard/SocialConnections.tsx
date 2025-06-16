@@ -4,12 +4,13 @@ import {
   CheckCircle,
   AlertCircle,
   Settings,
-  ExternalLink,
   Zap,
   BarChart3,
   Users,
-  Calendar
+  Calendar,
+  Landmark
 } from 'lucide-react';
+
 
 interface SocialPlatform {
   id: string;
@@ -151,13 +152,91 @@ const SocialConnections: React.FC = () => {
   const connectedPlatforms = platforms.filter(p => p.connected);
   const totalFollowers = connectedPlatforms.reduce((sum, p) => sum + (p.followers || 0), 0);
 
+  const [isOpen, setIsOpen] = useState(false);
+
+  const closeDialog = () => setIsOpen(false);
+  const openDialog = () => setIsOpen(true);
+
   return (
     <div className="w-full max-w-none space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="px-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Social Media Connections</h1>
-        <p className="text-gray-600 mt-2 text-sm md:text-base">Connect your social accounts to schedule posts across all platforms</p>
+      <div className="px-2 flex w-full justify-between items-center">
+        <div className="">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Social Media Connections</h1>
+          <p className="text-gray-600 mt-2 text-sm md:text-base">Connect your social accounts to schedule posts across all platforms</p>
+        </div>
+        <div className="flex-end items-center">
+          <div className="flex justify-end items-center">
+            <button
+              onClick={openDialog}
+              className="px-4 flex items-center py-2 bg-gradient-to-tr from-blue-500 to-blue-600 text-white border border-gray-300 rounded-md hover:bg-blue-700 transition"
+            >
+              <Landmark className="w-4 h-4 mr-2 inline-block" />
+              <p>Create A Brand</p>
+            </button>
+
+            {isOpen && (
+              <>
+                {/* Overlay */}
+                <div
+                  onClick={closeDialog}
+                  className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                />
+
+                {/* Dialog Content */}
+                <div
+                  className="fixed z-50 top-1/2 left-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-xl shadow-xl"
+                  role="dialog"
+                  aria-modal="true"
+                >
+                  {/* Header */}
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold">Create A Brand</h2>
+                    <p className="text-sm text-gray-500">
+                      Create a new brand to connect with your social media accounts.
+                    </p>
+                  </div>
+
+                  {/* Form Fields */}
+                  <div className="grid gap-4">
+                    <div>
+                      <label htmlFor="brand-name" className="block text-sm font-medium mb-1">
+                        Brand Name
+                      </label>
+                      <input
+                        id="brand-name"
+                        placeholder="Enter brand name"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex justify-end gap-2 mt-6">
+                    <button
+                      onClick={closeDialog}
+                      className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-100"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm bg-black text-white rounded-md hover:bg-gray-800"
+                    >
+                      Create Brand
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
+
+
 
       {/* Overview Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 px-2">

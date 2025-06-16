@@ -27,26 +27,21 @@ const Layout: React.FC = () => {
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+
   // Check if user is logged in
   const { loggedUser, userDetails, setLoggedUser } = useContext(AppContext);
 
   React.useEffect(() => {
     if (!loggedUser) {
-      setIsLoggedIn(false)
       navigate('/onboarding/login');
     }
   }, [loggedUser, navigate]);
 
-  if (!loggedUser) {
-    return null;
-  }
 
   const logout = () => {
     // Clear user data and redirect to login
     localStorage.removeItem('user');
-    localStorage.removeItem("token")
-    setIsLoggedIn(false);
+    localStorage.removeItem("token");
     setLoggedUser(null);
     navigate('/onboarding/login');
   }

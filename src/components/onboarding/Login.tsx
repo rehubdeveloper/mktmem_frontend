@@ -102,7 +102,7 @@ export default function Login() {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
 
-            // Update context - this will trigger the user profile fetch
+            // Update context - this will trigger the useEffect to fetch userDetails
             setLoggedUser(data.user);
 
             console.log('Login successful!');
@@ -113,13 +113,12 @@ export default function Login() {
                 password: '',
             });
 
-            // Show success message
             setMessage('Login successful! Redirecting to dashboard...');
 
-            // Wait a brief moment for context to update, then navigate
-            setTimeout(() => {
-                navigate("/dashboard");
-            }, 2000);
+            // Navigate to dashboard
+
+            navigate('/dashboard');
+
 
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred during login';
@@ -134,7 +133,8 @@ export default function Login() {
         }
     }
 
-    const [message, setMessage] = useState<string | null>(null);
+    const [message, setMessage] = useState<string>('');
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 py-12 px-4">
