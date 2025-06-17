@@ -11,7 +11,6 @@ const Layout: React.FC = () => {
   const navigate = useNavigate();
   const { loggedUser, userDetails, setLoggedUser } = useContext(AppContext);
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!loggedUser) {
       navigate('/onboarding/login');
@@ -25,7 +24,6 @@ const Layout: React.FC = () => {
     navigate('/onboarding/login');
   }, [setLoggedUser, navigate]);
 
-  // Memoize display names to avoid recomputation
   const displayName = useMemo(() => loggedUser?.username || 'User', [loggedUser]);
   const businessName = useMemo(() => userDetails?.business_name || 'Business', [userDetails]);
 
@@ -69,7 +67,10 @@ const Layout: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{displayName}</p>
-                <p className="text-xs text-gray-500">{loggedUser.email}</p>
+                <p className="text-xs text-gray-500 truncate max-w-[100px] md:max-w-none">
+                  {loggedUser.email}
+                </p>
+
               </div>
               <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-orange-700">{displayName.charAt(0)}</span>
@@ -97,8 +98,8 @@ const Layout: React.FC = () => {
                     <Link
                       to={item.href}
                       className={`flex items-center space-x-3 px-1 md:px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
-                          ? 'bg-orange-50 text-orange-700 border border-orange-200'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                         }`}
                     >
                       <item.icon className="w-5 h-5" />

@@ -170,20 +170,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, []);
 
-  // Fetch user profile when loggedUser changes
   useEffect(() => {
     if (loggedUser) {
       fetchUserProfile().catch(error => {
         console.error('Error fetching user profile on login:', error);
       });
     } else {
-      // Clear user details when user logs out
       setUserDetails(null);
       setUserDetailsError(null);
     }
   }, [loggedUser, fetchUserProfile]);
 
-  // Enhanced setLoggedUser function that also updates localStorage
   const handleSetLoggedUser = useCallback((user: any) => {
     setLoggedUser(user);
     if (user) {
