@@ -74,10 +74,11 @@ const Overview: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(true);
 
+
   useEffect(() => {
-    const waitForUser = async () => {
-      // Simulate async load delay, remove if already handled elsewhere
-      await new Promise((res) => setTimeout(res, 500));
+    const delayAndCheckUser = async () => {
+      // Simulate intentional load delay (e.g., to fetch user & stats)
+      await new Promise((res) => setTimeout(res, 500)); // Adjust as needed
 
       if (loggedUser === null) {
         navigate('/onboarding/login');
@@ -86,18 +87,27 @@ const Overview: React.FC = () => {
       }
     };
 
-    waitForUser();
+    delayAndCheckUser();
   }, [loggedUser, navigate]);
 
-  // Use business_name if available, otherwise fallback to username
-  const displayName = loggedUser.business_name || 'User';
+  const displayName = loggedUser?.business_name || 'User';
+
+  // === Spinner while loading ===
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-orange-500 border-solid"></div>
+      </div>
+    );
+  }
 
 
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-orange-500">loading</div>
-      </div>}>
+      </div>
+    }>
       <div className="space-y-8">
         {/* Welcome Header */}
         <div className="bg-gradient-to-r from-orange-600 to-orange-700 rounded-2xl p-8 text-white">

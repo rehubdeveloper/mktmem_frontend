@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Link,
   CheckCircle,
@@ -8,9 +8,9 @@ import {
   BarChart3,
   Users,
   Calendar,
-  Landmark
+  Landmark,
+  FeatherIcon
 } from 'lucide-react';
-import { AppContext } from '../../context/AppContext';
 
 
 interface SocialPlatdiv {
@@ -25,7 +25,7 @@ interface SocialPlatdiv {
 }
 
 const SocialConnections: React.FC = () => {
-  const [platdivs, setPlatdivs] = useState<SocialPlatdiv[]>([
+  const [Platforms, setPlatforms] = useState<SocialPlatdiv[]>([
     {
       id: 'facebook',
       name: 'Facebook',
@@ -113,7 +113,7 @@ const SocialConnections: React.FC = () => {
   };
 
   const handleConnect = (platdivId: string) => {
-    setPlatdivs(platdivs.map(platdiv =>
+    setPlatforms(Platforms.map(platdiv =>
       platdiv.id === platdivId
         ? { ...platdiv, status: 'pending' as const }
         : platdiv
@@ -121,7 +121,7 @@ const SocialConnections: React.FC = () => {
 
     // Simulate connection process
     setTimeout(() => {
-      setPlatdivs(platdivs.map(platdiv =>
+      setPlatforms(Platforms.map(platdiv =>
         platdiv.id === platdivId
           ? {
             ...platdiv,
@@ -136,7 +136,7 @@ const SocialConnections: React.FC = () => {
   };
 
   const handleDisconnect = (platdivId: string) => {
-    setPlatdivs(platdivs.map(platdiv =>
+    setPlatforms(Platforms.map(platdiv =>
       platdiv.id === platdivId
         ? {
           ...platdiv,
@@ -150,8 +150,8 @@ const SocialConnections: React.FC = () => {
     ));
   };
 
-  const connectedPlatdivs = platdivs.filter(p => p.connected);
-  const totalFollowers = connectedPlatdivs.reduce((sum, p) => sum + (p.followers || 0), 0);
+  const connectedPlatforms = Platforms.filter(p => p.connected);
+  const totalFollowers = connectedPlatforms.reduce((sum, p) => sum + (p.followers || 0), 0);
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -159,6 +159,9 @@ const SocialConnections: React.FC = () => {
   const openDialog = () => setIsOpen(true);
   const [brandName, setBrandName] = useState('');
   const [brandID, setBrandID] = useState('');
+  const [openBrands, setOpenBrands] = useState(false);
+  const openBrandsDialog = () => setOpenBrands(true);
+  const closeBrandsDialog = () => setOpenBrands(false);
 
   const createBrand = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,14 +194,14 @@ const SocialConnections: React.FC = () => {
     }
   }
 
-  const updateBrand = async () => {
+  const updateBrand = async (brand_id: string) => {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('No authentication token found');
     }
 
     try {
-      const response = await fetch(`https://mktmem-backend.onrender.com/api/users/brands/${brandID}/update/?newName=${brandName}`, {
+      const response = await fetch(`https://mktmem-backend.onrender.com/api/users/brands/${brand_id}/update/?newName=${brandName.trim()}`, {
         method: 'GET',
         headers: {
           'Authorization': `Token ${token}`,
@@ -211,6 +214,10 @@ const SocialConnections: React.FC = () => {
       }
       const data = await response.json();
       console.log("response:", response);
+      console.log('Brand updated successfully!');
+      setBrandName('');
+      setBrandID('');
+      return data;
 
     } catch (error) {
       console.error('Brand update error:', error);
@@ -218,24 +225,74 @@ const SocialConnections: React.FC = () => {
     }
   };
 
+  const [creating, setCreating] = useState(false);
+
+  const [brands, setBrands] = useState<Array<{ name: string; brand_id: string }>>([]);
+  const [currentBrand, setCurrentBrand] = useState<{ name: string; brand_id: string; } | null>(null);
+
+  const getBrands = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+    try {
+      const response = await fetch('https://mktmem-backend.onrender.com/api/users/brands/', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch brands: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Brands fetched successfully:', data.brands);
+      setBrands(data.brands);
+      return data.brands;
+
+    } catch (error) {
+      console.error('Error fetching brands:', error);
+      throw error;
+    }
+
+  };
+
   return (
     <div className="w-full max-w-none space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="px-2 flex w-full justify-between items-center">
+      <div className="px-2 flex flex-col md:flex-row space-y-3 md:space-x-auto w-full justify-between items-center">
         <div className="">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Social Media Connections</h1>
 
         </div>
         <div className="flex-end items-center">
-          <div className="flex justify-end items-center">
+          <div className="flex justify-end items-center space-x-2 md:space-x-3">
             <button
-              onClick={(e) => {
-                openDialog();
-                createBrand(e);
+              onClick={async (e) => {
+                e.preventDefault();
+                try {
+                  await getBrands();
+                  openBrandsDialog();
+                } catch (error) {
+                  console.error('Error opening brands dialog:', error);
+                  // Optionally show error toast or dialog
+                }
               }}
               className="px-3 md:px-4 flex items-center py-2 bg-gradient-to-tr from-blue-500 to-blue-600 text-white border border-gray-300 rounded-md hover:bg-blue-700 transition"
             >
               <Landmark className="w-4 md:w-5 h-4 md:h-5 mr-2 inline-block" />
+              <p className='text-xs md:text-lg md:font-bold'>View Brands</p>
+            </button>
+            <button
+              onClick={(e) => {
+                openDialog();
+              }}
+              className="px-3 md:px-4 flex items-center py-2 bg-gradient-to-tr from-blue-500 to-blue-600 text-white border border-gray-300 rounded-md hover:bg-blue-700 transition"
+            >
+              <FeatherIcon className="w-4 md:w-5 h-4 md:h-5 mr-2 inline-block" />
               <p className='text-xs md:text-lg md:font-bold'>Create Brand</p>
             </button>
           </div>
@@ -245,6 +302,42 @@ const SocialConnections: React.FC = () => {
       <div className="flex justify-center items-center px-2 md:text-lg md:font-semibold">
         <h1 className="text-gray-600 mt-2 text-sm md:text-base">Connect your social accounts to schedule posts across all platforms</h1>
       </div>
+      {openBrands ? (
+        <div onClick={() => {
+          closeBrandsDialog();
+        }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-md border border-gray-200 ring-2 ring-blue-500">
+            <h2 className="text-xl font-semibold mb-4">Your Brands</h2>
+            <ul className="space-y-2">
+              {brands.map((brand) => (
+                <li key={brand.brand_id} className="flex justify-between items-center">
+                  <span>{brand.name}</span>
+                  <button
+                    onClick={() => {
+                      setCurrentBrand(brand);
+                      closeBrandsDialog();
+                    }}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Select
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={closeBrandsDialog}
+              className="mt-4 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-center items-center h-full">
+          <p className="text-gray-500">No brands available. Please create a brand.</p>
+        </div>
+      )}
 
       {isOpen && (
         <>
@@ -297,16 +390,26 @@ const SocialConnections: React.FC = () => {
                 Cancel
               </button>
               <button
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.preventDefault();
-                  updateBrand();
-                  closeDialog();
+                  setCreating(true);
+
+                  try {
+                    const created = await createBrand(e);
+                    await updateBrand(created.brand_id);
+                    closeDialog();
+                  } catch (error) {
+                    console.error('Brand creation or update failed:', error);
+                    setCreating(false)
+                  } finally {
+                    setCreating(false);
+                  }
                 }}
 
                 type="submit"
                 className="px-4 py-2 text-sm bg-black text-white rounded-md hover:bg-gray-800"
               >
-                Create Brand
+                {creating ? 'Creating...' : 'Create Brand'}
               </button>
             </div>
           </div>
@@ -323,7 +426,7 @@ const SocialConnections: React.FC = () => {
               <Link className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg md:text-2xl font-bold text-gray-900">{connectedPlatdivs.length}</p>
+              <p className="text-lg md:text-2xl font-bold text-gray-900">{connectedPlatforms.length}</p>
               <p className="text-gray-600 text-xs md:text-sm truncate">Connected Accounts</p>
             </div>
           </div>
@@ -371,7 +474,7 @@ const SocialConnections: React.FC = () => {
         <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 md:mb-6">Platdiv Connections</h2>
 
         <div className="space-y-4 md:space-y-6">
-          {platdivs.map(platdiv => (
+          {Platforms.map(platdiv => (
             <div key={platdiv.id} className="border border-gray-200 rounded-lg p-4 md:p-6 hover:bg-gray-50 transition-colors">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
@@ -481,7 +584,7 @@ const SocialConnections: React.FC = () => {
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Unified Scheduling</h4>
             <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Schedule posts across all platdivs simultaneously</li>
+              <li>• Schedule posts across all Platforms simultaneously</li>
               <li>• Optimize posting times for each platdiv automatically</li>
               <li>• Maintain consistent brand messaging everywhere</li>
             </ul>
@@ -489,7 +592,7 @@ const SocialConnections: React.FC = () => {
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Advanced Analytics</h4>
             <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Track perdivance across all connected platdivs</li>
+              <li>• Track perdivance across all connected Platforms</li>
               <li>• Identify your best-perdiving content types</li>
               <li>• Get AI-powered recommendations for improvement</li>
             </ul>
