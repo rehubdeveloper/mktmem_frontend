@@ -38,7 +38,6 @@ interface AppContextType {
   selectedServiceType: string[];
   setSelectedServiceType: (types: string[]) => void;
 }
-
 export const AppContext = createContext<AppContextType>({
   user: null,
   userDetails: null,
@@ -196,6 +195,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setUserDetailsError(null);
     }
   }, []);
+
 
   // Mock data states (keeping your existing data)
   const [strUnits, setStrUnits] = useState<STRUnit[]>([
