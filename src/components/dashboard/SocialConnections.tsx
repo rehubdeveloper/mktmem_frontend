@@ -479,7 +479,7 @@ const SocialConnections: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+              <span className="px-3 py-1 bg-blue-100 text-green-800 animate-pulse text-xs font-medium rounded-full">
                 Active Brand
               </span>
               <button
