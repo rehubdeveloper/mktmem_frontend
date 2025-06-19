@@ -657,6 +657,7 @@ const SocialConnections: React.FC = () => {
                   try {
                     const created = await createBrand(e);
                     await updateBrand(created.brand_id);
+                    await getBrands(); // Refresh brands after creation
                     closeDialog();
                   } catch (error) {
                     console.error('Brand creation or update failed:', error);
