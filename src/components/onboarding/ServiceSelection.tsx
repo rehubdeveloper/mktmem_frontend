@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, QrCode, MapPin, MessageSquare, Check } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { AppContext } from '../../context/AppContext';
+
 
 const ServiceSelection: React.FC = () => {
   const navigate = useNavigate();
-  const { user, setUser, setSelectedServiceType } = useApp();
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+
+  const { setSelectedServiceType } = useContext(AppContext)
 
   const services = [
     {
@@ -73,17 +75,8 @@ const ServiceSelection: React.FC = () => {
 
   const handleContinue = () => {
     if (selectedServices.length === 0) return;
-
-    const updatedUser = {
-      ...user!,
-      services: selectedServices.map(id => ({
-        id: id as any,
-        name: services.find(s => s.id === id)?.name || '',
-        active: false,
-      }))
-    };
     setSelectedServiceType(selectedServices);
-    setUser(updatedUser);
+    console.log(selectedServices)
     navigate('/onboarding/register');
   };
 
