@@ -90,7 +90,13 @@ const Overview: React.FC = () => {
     delayAndCheckUser();
   }, [loggedUser, navigate]);
 
-  const displayName = loggedUser?.business_name || 'User';
+  type User = {
+    id: string;
+    email: string;
+    username?: string;
+    // ...other properties
+  };
+  const displayName = (loggedUser as User)?.username || 'User';
 
   // === Spinner while loading ===
   if (isLoading) {

@@ -9,10 +9,10 @@ import { AppContext } from '../context/AppContext';
 const Layout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { loggedUser, userDetails, setLoggedUser } = useContext(AppContext);
+  const { loggedUser, userDetails, setLoggedUser, isInitializing } = useContext(AppContext);
 
   useEffect(() => {
-    if (!loggedUser) {
+    if (!loggedUser && !isInitializing) {
       navigate('/onboarding/login');
     }
   }, [loggedUser, navigate]);
@@ -24,7 +24,15 @@ const Layout: React.FC = () => {
     navigate('/onboarding/login');
   }, [setLoggedUser, navigate]);
 
-  const displayName = useMemo(() => loggedUser?.username || 'User', [loggedUser]);
+  type User = {
+    id: string;
+    email: string;
+    businessName?: string;
+    username: string
+    // ...other properties
+  };
+
+  const displayName = useMemo(() => (loggedUser as User | null)?.username || 'User', [loggedUser]);
   const businessName = useMemo(() => userDetails?.business_name || 'Business', [userDetails]);
 
   const navigation = useMemo(() => [
